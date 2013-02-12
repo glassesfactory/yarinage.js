@@ -1,6 +1,8 @@
 Yarinage.js
 ================
 
+[![Build Status](https://travis-ci.org/glassesfactory/yarinage.js.png)](https://travis-ci.org/glassesfactory/yarinage.js)
+
 Yarinage.js は msgpack を Ajax でやり取りすることをサポートします。
 msgpack.js に依存しています。
 
