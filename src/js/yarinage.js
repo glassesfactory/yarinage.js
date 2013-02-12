@@ -13,8 +13,12 @@ Yarinage = (function() {
   Yarinage.prototype.error = null;
 
   function Yarinage(options) {
+    var ua;
     this.success = options && options.success ? options.success : null;
     this.error = options && options.error ? options.error : null;
+    ua = navigator.userAgent;
+    this.isChrome = ua.match(/Chrome\/\d+/g) ? true : false;
+    console.log(this.isChrome);
   }
 
   Yarinage.prototype.load = function(url, options) {
@@ -28,17 +32,19 @@ Yarinage = (function() {
     this.xhr = this._setupXHR(method, url, async, true);
     this.xhr.onreadystatechange = function() {
       var rv;
-      if (_this.xhr.readyState === 4 && (_this.xhr.status === 200 || _this.xhr.status === 304)) {
-        if (_this.success) {
-          rv = msgpack.unpack(new Uint8Array(_this.xhr.response));
-          return _this.success.apply(_this, [rv]);
+      if (_this.xhr.readyState === 4) {
+        if (_this.xhr.status === 200 || _this.xhr.status === 304) {
+          if (_this.success) {
+            rv = msgpack.unpack(new Uint8Array(_this.xhr.response));
+            return _this.success.apply(_this, [rv]);
+          }
+        } else {
+          if (_this.error) {
+            return _this.error.apply(_this, _this.xhr);
+          }
         }
-      } else if (_this.xhr.readyState === 4 && _this.xhr.status !== 200) {
-        if (_this.error) {
-          return _this.error.apply(_this, _this.xhr);
-        }
-      } else if (_this.xhr.readyState === 4) {
-        if (_this.xhr.status === 400) {
+      } else {
+        if (_this.xhr.status !== 200 && _this.xhr.status !== 304) {
           return _this.error.apply(_this, _this.xhr);
         }
       }
@@ -47,20 +53,24 @@ Yarinage = (function() {
   };
 
   Yarinage.prototype.upload = function(url, data, options) {
-    var async, buffer, contentType, method, packed;
+    var async, bin, contentType, method, packed;
     method = options && options.method ? options.method : 'POST';
     contentType = options && options.contentType ? options.contentType : 'application/x-msgpack; charset=x-user-defined';
     async = options && options.async ? options.async : true;
     this.success = options && options.success ? options.success : this.success;
     this.error = options && options.error ? options.error : this.error;
     packed = msgpack.pack(data);
-    buffer = new Uint8Array(packed).buffer;
+    bin = new Uint8Array(packed);
     this.xhr = this._setupXHR(method, url, async);
     if (options && options.responseType) {
       this.xhr.responseType = options.responseType;
     }
     this.xhr.setRequestHeader('Content-Type', contentType);
-    this.xhr.send(buffer);
+    if (this.isChrome) {
+      this.xhr.send(bin);
+    } else {
+      this.xhr.send(bin.buffer);
+    }
     return this.xhr;
   };
 
@@ -76,20 +86,20 @@ Yarinage = (function() {
       xhr.responseType = 'arraybuffer';
     }
     xhr.onreadystatechange = function() {
-      if (xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 304)) {
-        if (_this.success) {
-          return _this.success.apply(_this, [xhr.response]);
+      if (xhr.readyState === 4) {
+        if (xhr.status === 200 || xhr.status === 304) {
+          if (_this.success) {
+            return _this.success.apply(_this, [xhr.response]);
+          }
+        } else {
+          if (_this.error) {
+            return _this.error.apply(_this, [xhr]);
+          }
         }
-      } else if (xhr.readyState === 4 && xhr.status !== 200) {
-        if (_this.error) {
+      } else {
+        if (_this.xhr.status !== 200 && _this.xhr.status !== 304) {
           return _this.error.apply(_this, [xhr]);
         }
-      } else if (xhr.readyState === 4) {
-        if (xhr.status === 400) {
-          return _this.error.apply(_this, [xhr]);
-        }
-      } else if (xhr.readyState === 3 && xhr.status === 400) {
-        return _this.error.apply(_this, [xhr]);
       }
     };
     return xhr;

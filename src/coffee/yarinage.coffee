@@ -9,8 +9,9 @@ class Yarinage
   constructor:(options)->
     @success = if options and options.success then options.success else null
     @error = if options and options.error then options.error else null
-    # console.log @success
-
+    ua = navigator.userAgent
+    @isChrome = if ua.match(/Chrome\/\d+/g) then true else false
+    console.log @isChrome
 
   #うけとる
   load:(url, options)->
@@ -22,21 +23,18 @@ class Yarinage
     @xhr = @_setupXHR(method, url, async, true)
     
     @xhr.onreadystatechange =()=>
-      if @xhr.readyState is 4 and ( @xhr.status is 200 or @xhr.status is 304 )
-        if @success
-          rv = msgpack.unpack(new Uint8Array(@xhr.response))
-          @success.apply(@, [rv])
-          # @destory()
-      else if @xhr.readyState is 4 and @xhr.status isnt 200
-        if @error
+      if @xhr.readyState is 4
+        if @xhr.status is 200 or @xhr.status is 304
+          if @success
+            rv = msgpack.unpack(new Uint8Array(@xhr.response))
+            @success.apply(@, [rv])
+        else
+          if @error
+            @error.apply(@, @xhr)
+      else
+        if @xhr.status isnt 200 and @xhr.status isnt 304
           @error.apply(@, @xhr)
-      else if @xhr.readyState is 4
-        if @xhr.status is 400
-          @error.apply(@, @xhr)
-          # @destory()
-      # else
-        # console.log xhr
-        # @destory()
+      
     @xhr.send()
 
   #おくる
@@ -47,12 +45,16 @@ class Yarinage
     @success = if options and options.success then options.success else @success
     @error = if options and options.error then options.error else @error
     packed = msgpack.pack(data)
-    buffer = new Uint8Array(packed).buffer
+    bin = new Uint8Array(packed)
     @xhr = @_setupXHR(method, url, async)
     if options and options.responseType
       @xhr.responseType = options.responseType
     @xhr.setRequestHeader('Content-Type', contentType)
-    @xhr.send(buffer)
+    
+    if @isChrome
+      @xhr.send(bin)
+    else
+      @xhr.send(bin.buffer)
     return @xhr
 
 
@@ -64,23 +66,16 @@ class Yarinage
     if load is true
       xhr.responseType = 'arraybuffer'
     xhr.onreadystatechange =()=>
-      if xhr.readyState is 4 and ( xhr.status is 200 or xhr.status is 304 )
-        if @success
-          @success.apply(@, [xhr.response])
-          # @destory()
-      else if xhr.readyState is 4 and xhr.status isnt 200
-        if @error
+      if xhr.readyState is 4
+        if xhr.status is 200 or xhr.status is 304
+          if @success
+            @success.apply(@, [xhr.response])
+        else
+          if @error
+            @error.apply(@, [xhr])
+      else
+        if @xhr.status isnt 200 and @xhr.status isnt 304
           @error.apply(@, [xhr])
-      else if xhr.readyState is 4
-        if xhr.status is 400
-          @error.apply(@, [xhr])
-      else if xhr.readyState is 3 and xhr.status is 400
-        @error.apply(@, [xhr])
-
-          # @destory()
-      # else if xhr.status is 403
-        #@abort()
-        # @error.apply()
     return xhr
 
   #XMLHttpRequest つくる
