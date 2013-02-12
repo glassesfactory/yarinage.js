@@ -15,7 +15,6 @@ Yarinage = (function() {
   function Yarinage(options) {
     this.success = options && options.success ? options.success : null;
     this.error = options && options.error ? options.error : null;
-    console.log(this.success);
   }
 
   Yarinage.prototype.load = function(url, options) {
@@ -24,6 +23,8 @@ Yarinage = (function() {
     method = options && options.method ? options.method : 'GET';
     contentType = options && options.contentType ? options.contentType : 'application/x-msgpack';
     async = options && options.async ? options.async : true;
+    this.success = options && options.success ? options.success : this.success;
+    this.error = options && options.error ? options.error : this.error;
     this.xhr = this._setupXHR(method, url, async, true);
     this.xhr.onreadystatechange = function() {
       var rv;
@@ -50,6 +51,8 @@ Yarinage = (function() {
     method = options && options.method ? options.method : 'POST';
     contentType = options && options.contentType ? options.contentType : 'application/x-msgpack; charset=x-user-defined';
     async = options && options.async ? options.async : true;
+    this.success = options && options.success ? options.success : this.success;
+    this.error = options && options.error ? options.error : this.error;
     packed = msgpack.pack(data);
     buffer = new Uint8Array(packed).buffer;
     this.xhr = this._setupXHR(method, url, async);
@@ -74,7 +77,6 @@ Yarinage = (function() {
     }
     xhr.onreadystatechange = function() {
       if (xhr.readyState === 4 && (xhr.status === 200 || xhr.status === 304)) {
-        console.log(_this.success, "sakusesu");
         if (_this.success) {
           return _this.success.apply(_this, [xhr.response]);
         }

@@ -9,7 +9,7 @@ class Yarinage
   constructor:(options)->
     @success = if options and options.success then options.success else null
     @error = if options and options.error then options.error else null
-    console.log @success
+    # console.log @success
 
 
   #うけとる
@@ -19,7 +19,7 @@ class Yarinage
     async = if options and options.async then options.async else true
     @success = if options and options.success then options.success else @success
     @error = if options and options.error then options.error else @error
-    @xhr = @_setupXHR(method, url, async, true)  
+    @xhr = @_setupXHR(method, url, async, true)
     
     @xhr.onreadystatechange =()=>
       if @xhr.readyState is 4 and ( @xhr.status is 200 or @xhr.status is 304 )
