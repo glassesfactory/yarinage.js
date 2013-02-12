@@ -11,7 +11,6 @@ class Yarinage
     @error = if options and options.error then options.error else null
     ua = navigator.userAgent
     @isChrome = if ua.match(/Chrome\/\d+/g) then true else false
-    console.log @isChrome
 
   #うけとる
   load:(url, options)->

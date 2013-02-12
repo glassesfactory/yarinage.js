@@ -18,7 +18,6 @@ Yarinage = (function() {
     this.error = options && options.error ? options.error : null;
     ua = navigator.userAgent;
     this.isChrome = ua.match(/Chrome\/\d+/g) ? true : false;
-    console.log(this.isChrome);
   }
 
   Yarinage.prototype.load = function(url, options) {
